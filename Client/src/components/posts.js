@@ -14,16 +14,6 @@ import TableRow from '@material-ui/core/Table';
 import Paper from '@material-ui/core/Paper';
 
 
-//import moment from 'moment';
-//import Context from '../utils/context';
-//import TextField from '@material-ui/core/TextField';
-//import Card from "@material-ui/core/Card";
-//import CardContent from "@material-ui/core/CardContent";
-//import CardHeader from "@material-ui/core/CardHeader";
-
-//import '../App.css';
-//import '../styles/pagination.css';
-
 const RenderPosts = post => (
   <TableRow>
     <TableCell>
