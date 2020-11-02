@@ -1,28 +1,14 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
-import axios from 'axios'
+import React from 'react';
+import ContextState from './context_state_config';
 
-class App extends Component{
-  state = {
-    hello : null
-  }
-
-  componentDidMount() {
-    axios.get('/hello')
-      .then(res => this.setState({hello: res.data}) )
-      .catch(err => console.log(err) )
-  }
-
-  render (){
+const App = () => {
     return(
       <div>
-        {this.state.hello
-        ? <div> {this.state.hello}</div>
-        : null }
+      React
+      <ContextState />
       </div>
-    );
-  }
+    )
 }
+
 
 export default App;
