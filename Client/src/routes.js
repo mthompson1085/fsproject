@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext} from 'react';
 import { Router, Route, Switch, Redirect } from 'react-router';
 import history from './utils/history';
 import Context from './utils/context';
@@ -10,7 +10,7 @@ import HooksContainer1 from './hooks/hook1';
 import Callback from './hooks/callback';
 import HooksForm from './hooks/hooks_form1';
 import PrivateComponent from './hooks/privatecomponent';
-import Profile from './hooks/profile';
+import Profile from './profile/profile';
 
 
 const PrivateRoute = ({component: Component, auth }) => (
