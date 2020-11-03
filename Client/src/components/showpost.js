@@ -38,8 +38,8 @@ class ShowPost extends Component {
             cid: ''
         }
     }
-componentDidMount(){
-    axios.get('api/get/allpostcomments', {params: {{this.props.location.state.post.post.pid}}})
+componentDidMount() {
+    axios.get('api/get/allpostcomments', {params: {post_id: this.props.location.state.post.post.pid}})
     .then(res => this.props.set_comments(res.data))
     .catch((err) => console.log(err))
 
@@ -56,6 +56,44 @@ handleClose = ( ) => (
 handleCommentChange = (event) => (
     this.setState({comment: event.target.value})
 )
+
+handleSubmit = (event) => {
+    event.preventDefault()
+    const user_id = this.props.db_profile[0].uid
+    const post_id = this.props.location.state.post.post.post_id
+    const username = this.props.db_profile[0].username
+    const data = {comment: event.target.comment.value, post_id: post_id, user_id: user_id, username: username}
+
+    axios.post ('/api/post/commenttodb', data)
+        .then(res => console.log(res))
+        .catch((err) => console.log (err))
+        .then(setTimeout(() => history.replace('/posts'), 700))
+}
+
+handleDeleteComment = () => {
+    const cid = this.state.cid
+    axios.delete('/api/delete.comment', {data: {cid: cid}} )
+    .then(res => console.log(res))
+    .catch((err) => console.log (err))
+    .then(setTimeout(() => history.replace('/posts'), 700))
+}
+
+handleUpdate = () =>{
+    const comment = this.state.comments
+    const cid = this.state.cid
+    const user_id = this.props.db_profile[0].uid
+    const post_id = this.props.location.state.post.post.post_id
+    const username = this.props.db_profile[0].username
+
+    const data = {cid: cid, comment:comment, post_id: post_id, user_id: user_id, username: username}
+    axios.put ('/api/put/commenttodb', data)
+        .then(res => console.log(res))
+        .catch((err) => console.log (err))
+        .then(setTimeout(() => history.replace('/posts'), 700))
+
+
+
+}
 
     render () {
         return(
