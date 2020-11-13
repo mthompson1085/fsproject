@@ -27,6 +27,7 @@ const PostsReducer = (state = initialState, action) => {
           ...state,
           comments: []
         }
+        
       default:
         return state
       }

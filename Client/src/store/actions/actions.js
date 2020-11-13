@@ -1,4 +1,3 @@
-import { AccordionActions } from '@material-ui/core'
 import * as ACTION_TYPES from './action_types'
 
 export const SUCCESS = {
@@ -93,11 +92,22 @@ export const fetch_post_comments = (comments) => {
   }
 }
 
+export const fetch_user_posts = () => {
+  return {
+    type: ACTION_TYPES.FETCH_USER_POSTS
+  }
+}
+
+export const remove_user_posts = (comments) => {
+  return {
+    type: ACTION_TYPES.REMOVE_USER_POSTS,
+    payload: comments
+  }
+}
+
 export const fetch_db_post = (posts) => {
   return {
     type: ACTION_TYPES.FETCH_DB_POSTS,
     payload: posts
   }
 }
-
-export default Actions;

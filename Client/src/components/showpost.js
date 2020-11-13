@@ -1,176 +1,328 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useContext, useState, useEffect } from 'react';
 
-import * as ACTIONS from '../store/actions/actions';
+
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import history from '../utils/history';
+import Context from '../utils/context';
 
 import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+
 import Button from '@material-ui/core/Button';
 
-const RenderComments = (comment) => (
-    <div>
-        <h3> {comment.comment.comment} </h3>
-        <small>{comment.comment.date_created}</small>
-        <p> By: {comment.comment.author} </p>
-        {comment.cur_user_id == comment.comment.user_id
-        ? <Button onClick={() => this.handleClickOpen(comment.comment.cid, comment.comment.comment)}> 
-            Edit
-          </Button>
-        :null
+
+const ShowPost = (props) => {
+  const context = useContext(Context)
+
+  const [stateLocal, setState] = useState({ comment: '',
+                                            fetching: false,
+                                            fetched: false,
+                                            cid: 0,
+                                            delete_comment_id: 0,
+                                            edit_comment_id: 0,
+                                            edit_comment: '',
+                                            comments_arr: null,
+                                            cur_user_id: null,
+                                            like_post: true,
+                                            likes: 0,
+                                            like_user_ids: [],
+                                            post_title: null,
+                                            post_body: null,
+                                            post_author: null,
+                                            post_id: null
+                                           })
+
+    useEffect(() => {
+      if(props.location.state && !stateLocal.fetched) {
+        console.log('tttt')
+        setState({...stateLocal,
+                  fetched: true,
+                  likes: props.location.state.post.post.likes,
+                  like_user_ids: props.location.state.post.post.like_user_id,
+                  post_title: props.location.state.post.post.title,
+                  post_body: props.location.state.post.post.body,
+                  post_author: props.location.state.post.post.author,
+                  post_id: props.location.state.post.post.pid})
         }
-    </div>
+      }, [stateLocal,
+          props.location])
 
-)
+  useEffect( () => {
+    if(!props.location.state && !stateLocal.fetched) {
+      const post_id = props.location.pathname.substring(6)
 
-class ShowPost extends Component {
-    constructor(props){
-        super(props)
-
-        this.state = {
-            open: false,
-            comment: '',
-            cid: ''
-        }
+      axios.get('/api/get/post',
+                  {params: {post_id: post_id}} )
+        .then(res => res.data.length !== 0
+                ?   setState({...stateLocal,
+                        fetched: true,
+                        likes: res.data[0].likes,
+                        like_user_ids: res.data[0].like_user_id,
+                        post_title: res.data[0].title,
+                        post_body: res.data[0].body,
+                        post_author: res.data[0].author,
+                        post_id: res.data[0].pid
+                      })
+                 : null
+              )
+        .catch((err) => console.log(err) )
     }
-componentDidMount() {
-    axios.get('api/get/allpostcomments', {params: {post_id: this.props.location.state.post.post.pid}})
-    .then(res => this.props.set_comments(res.data))
-    .catch((err) => console.log(err))
+  }, [stateLocal,
+      props.location])
 
-}
+   useEffect(() => {
+     if(!stateLocal.comments_arr) {
+       if(props.location.state) {
+         const post_id = props.location.state.post.post.pid
+         axios.get('/api/get/allpostcomments',
+                     {params: {post_id: post_id}} )
+           .then(res => res.data.length !== 0
+                          ? setState({...stateLocal, comments_arr: [...res.data]})
+                          : null )
+           .catch((err) => console.log(err))
+       } else {
+         console.log('ffff')
+         const post_id = props.location.pathname.substring(6)
+         setTimeout(() =>
+         axios.get('/api/get/allpostcomments',
+                       {params: {post_id: post_id}} )
+             .then(res => res.data.length !== 0
+                            ? setState({...stateLocal, comments_arr: [...res.data]})
+                            : null )
+             .catch((err) => console.log(err) )
+          , 500 )
+       }
+     }
+   }, [props.location, stateLocal])
 
-handleClickOpen = (cid, comment ) => (
-    this.setState({ open: true, comment: comment, cid:cid})
-);
 
-handleClose = ( ) => (
-    this.setState({ open: false, comment: '', cid:''})
-)
+    const handleCommentSubmit = (submitted_comment) => {
+        setState({...stateLocal, comments_arr: [submitted_comment,
+                                                ...stateLocal.comments_arr]})
+     };
 
-handleCommentChange = (event) => (
-    this.setState({comment: event.target.value})
-)
+     const handleCommentUpdate = (comment) => {
+       const commentIndex = stateLocal.comments_arr.findIndex(com => com.cid === comment.cid)
+       var newArr = [...stateLocal.comments_arr ]
+       newArr[commentIndex] = comment
 
-handleSubmit = (event) => {
-    event.preventDefault()
-    const user_id = this.props.db_profile[0].uid
-    const post_id = this.props.location.state.post.post.post_id
-    const username = this.props.db_profile[0].username
-    const data = {comment: event.target.comment.value, post_id: post_id, user_id: user_id, username: username}
+       setTimeout(() => setState({...stateLocal,
+                                  comments_arr: [...newArr],
+                                  edit_comment_id: 0 }),
+                              100)
+     };
 
-    axios.post ('/api/post/commenttodb', data)
+
+     const handleCommentDelete = (cid) => {
+       setState({...stateLocal, delete_comment_id: cid})
+       const newArr = stateLocal.comments_arr.filter(com => com.cid !== cid)
+       setState({...stateLocal, comments_arr: newArr})
+     };
+
+     const handleEditFormClose = () => {
+       setState({...stateLocal, edit_comment_id: 0})
+     }
+
+    // props.cur_user_id === props.comment.user_id
+
+    const RenderComments = (props) => {
+      return(
+      <div className={stateLocal.delete_comment_id === props.comment.cid
+                        ? "FadeOutComment"
+                        : "CommentStyles"}>
+        <div>
+        {true
+          ? !props.isEditing
+            ?  <div>
+                  <p>{props.comment.comment} </p>
+                  <Button onClick={() => setState({...stateLocal,
+                                                  edit_comment_id: props.comment.cid,
+                                                  edit_comment: props.comment.comment
+                                                  })
+                                     }>
+                     Edit
+                   </Button>
+                </div>
+            :   <form onSubmit={(event, cid) => handleUpdate(event, props.comment.cid, props.comment) }>
+                  <input
+                    autoFocus={true}
+                    name="edit_comment"
+                    id="editted_comment"
+                    label="Comment"
+                    value={stateLocal.edit_comment}
+                    onChange={handleEditCommentChange}
+                  />
+                    <br />
+                    <Button type='submit'>
+                       Agree
+                    </Button>
+                    <Button type="button" onClick={handleEditFormClose}>
+                     Cancel
+                    </Button>
+                    <button onClick={() => handleDeleteComment(props.comment.cid)}>
+                      Delete
+                    </button>
+                  </form>
+            : null }
+          </div>
+        <small>
+          { props.comment.date_created === 'Just Now'
+            ?  <div> {props.comment.isEdited
+                  ? <span> Edited </span>
+                  : <span> Just Now </span> }</div>
+            :  props.comment.date_created
+          }
+        </small>
+        <p> By: { props.comment.author} </p>
+      </div>
+    );
+
+   }
+
+
+    const handleEditCommentChange = (event) => (
+      setState({...stateLocal,
+                edit_comment: event.target.value})
+    );
+
+    const handleSubmit = (event) => {
+      event.preventDefault()
+      setState({...stateLocal, comment: ''})
+
+      const comment = event.target.comment.value
+      const user_id = context.dbProfileState[0].uid
+      const username = context.dbProfileState[0].username
+      const post_id = stateLocal.post_id
+      const current_time = "Just Now"
+      const temp_cid = Math.floor(Math.random() * 1000);
+
+      const submitted_comment = {cid: temp_cid,
+                                 comment: comment,
+                                 user_id: user_id,
+                                 author: username,
+                                 date_created: current_time }
+
+      const data = {comment: event.target.comment.value,
+                    post_id: post_id,
+                    user_id: user_id,
+                    username: username}
+
+      axios.post('/api/post/commenttodb', data)
         .then(res => console.log(res))
-        .catch((err) => console.log (err))
-        .then(setTimeout(() => history.replace('/posts'), 700))
-}
+        .catch((err) => console.log(err))
+      window.scroll({top: 0, left: 0, behavior: 'smooth'})
+      handleCommentSubmit(submitted_comment)
+    }
 
-handleDeleteComment = () => {
-    const cid = this.state.cid
-    axios.delete('/api/delete.comment', {data: {cid: cid}} )
-    .then(res => console.log(res))
-    .catch((err) => console.log (err))
-    .then(setTimeout(() => history.replace('/posts'), 700))
-}
+    const handleUpdate = (event, cid, commentprops) => {
+      event.preventDefault()
+      console.log(commentprops)
+      const comment = event.target.editted_comment.value
+      const comment_id = cid
+      const post_id = stateLocal.post_id
+      const user_id = commentprops.userid
+      const username = commentprops.author
+      const isEdited = true
+      const current_time = "Just Now"
 
-handleUpdate = () =>{
-    const comment = this.state.comments
-    const cid = this.state.cid
-    const user_id = this.props.db_profile[0].uid
-    const post_id = this.props.location.state.post.post.post_id
-    const username = this.props.db_profile[0].username
+      const edited_comment = {cid: comment_id,
+                              comment: comment,
+                              user_id: user_id,
+                              author: username,
+                              date_created: current_time,
+                              isEdited: isEdited }
 
-    const data = {cid: cid, comment:comment, post_id: post_id, user_id: user_id, username: username}
-    axios.put ('/api/put/commenttodb', data)
+      const data = {cid: comment_id,
+                    comment: comment,
+                    post_id: post_id,
+                    user_id: user_id,
+                    username: username}
+
+      axios.put('/api/put/commenttodb', data)
         .then(res => console.log(res))
-        .catch((err) => console.log (err))
-        .then(setTimeout(() => history.replace('/posts'), 700))
-
-
-
-}
-
-    render () {
-        return(
-            <div>
-                <div>
-                    <h2>Post</h2>
-                        <h4>{this.props.location.state.post.post.title}</h4>
-                        <p>{this.props.location.state.post.post.body}</p>
-                        <p>{this.props.location.state.post.post.author}</p>
-                </div>
-                <div>
-                    <h2> Comments: </h2>
-                    {this.props.comments
-                        ? this.props.comments.map(comment =>
-                        <RenderComments comment={comment}
-                                         cur_user_id={this.props.db_profile[0].uid} 
-                                         key={comment.cid} />)
-                        :null
-                    }
-                    
-                </div>
-                <div>
-                    <form onSubmit={this.handleSubmit}>
-                        <TextField
-                            id="comment"
-                            label="Comment"
-                            margin="normal"
-                        />
-                        <br/>
-                        <Button type="submit">Submit</Button>
-                    </form>
-                </div>
-                <div>
-                    <Dialog
-                        open={this.state.open}
-                        onClose={this.handleClose}
-                        aria-lablledby="alert-dialog-title"
-                        aria-describedby="alert-dialog-description"
-                    >
-                        <DialogTitle id="alert-dialog-title">Edit Comment</DialogTitle>
-                            <DialogContent>
-                                <DialogContentText
-                                    id="alert-dialog-description"
-                                >
-                                <input type="text" value={this.state.comment} onChange={this.handleCommentChange}/>
-                                </DialogContentText>
-                                <DialogActions>
-                                    <Button onClick={() => {this.handleUpdate(); this.setState({open:false})} }>
-                                        Agree
-                                    </Button>
-                                    <Button onClick={()=> this.handleClose()}>
-                                    Cancel
-                                    </Button>
-                                    <Button onClick={()=> this.handleDeleteComment()}>
-                                    Delete
-                                    </Button>
-                                </DialogActions>
-                            </DialogContent>
-                    </Dialog>
-
-                </div>
-            </div>
-        )}
-}
-
-function mapStateToProps(state){
-    return{
-        comments: state.posts_reducer.comments,
-        db_profile: state.auth_reducer.db_profile
+        .catch((err) => console.log(err))
+      handleCommentUpdate(edited_comment);
     }
-}
 
-function mapDispatchToProps(dispatch){
-    return{
-        set_comments: (comments) => dispatch(ACTIONS.fetch_post_comments(comments))
+    const handleDeleteComment = (cid) => {
+      const comment_id = cid
+      console.log(cid)
+      axios.delete('/api/delete/comment', {data: {comment_id: comment_id}} )
+        .then(res => console.log(res))
+        .catch((err) => console.log(err))
+      handleCommentDelete(cid)
     }
-}
+
+    const handleLikes = () => {
+        const user_id = context.dbProfileState[0].uid
+        const post_id = stateLocal.post_id
+
+        const data = { uid: user_id, post_id: post_id }
+        console.log(data)
+        axios.put('/api/put/likes', data)
+          .then( !stateLocal.like_user_ids.includes(user_id) && stateLocal.like_post
+                    ? setState({...stateLocal,
+                                likes: stateLocal.likes + 1,
+                                like_post: false})
+                    : null )
+          .catch(err => console.log(err))
+      };
+
+    return(
+        <div>
+          <div>
+            <h2>Post</h2>
+            {stateLocal.comments_arr || props.location.state
+              ? <div>
+                  <p>{stateLocal.post_title}</p>
+                  <p>{stateLocal.post_body}</p>
+                  <p>{stateLocal.post_author}</p>
+                </div>
+            : null
+           }
+              <div style={{cursor: 'pointer'}} onClick={context.authState
+                                                        ? () => handleLikes()
+                                                        : () => history.replace('/signup')}>
+                  <i className="material-icons">thumb_up</i>
+                  <small className="notification-num-showpost">
+                    {stateLocal.likes}
+                  </small>
+                </div>
+          </div>
+          <div>
+
+            <h2> Comments:</h2>
+            {stateLocal.comments_arr
+              ? stateLocal.comments_arr.map((comment) =>
+                 <RenderComments comment={comment}
+                                 cur_user_id={context.dbProfileState
+                                                ? context.dbProfileState[0].uid
+                                                : null  }
+                                 key={comment.cid}
+                                 isEditing={comment.cid === stateLocal.edit_comment_id
+                                              ? true
+                                              : false }
+                       />)
+              : null
+            }
+          </div>
+          <div>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                id="comment"
+                label="Comment"
+                margin="normal"
+              />
+              <br />
+                  <Button variant="contained" color="primary" type="submit">
+                    Submit
+                  </Button>
+            </form>
+          </div>
+          <div>
+          </div>
+        </div>
+    )}
 
 
-export default connect(mapStateToProps,mapDispatchToProps)(ShowPost);
+export default ShowPost;

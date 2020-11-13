@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import axios from 'axios';
 import history from '../utils/history';
-
+import Context from '../utils/context';
 
 import TextField from '@material-ui/core/TextField';
 import Button from "@material-ui/core/Button";
 
 
-
-
 const EditPost = (props) => {
-  
+  const context = useContext(Context)
 
   const [stateLocal, setState] = useState({ title: props.location.state.post.post.title,
                                             body: props.location.state.post.post.body
@@ -24,6 +22,8 @@ const EditPost = (props) => {
   const handleBodyChange = (event) => {
     setState({...stateLocal, body: event.target.value })
   }
+
+
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -40,10 +40,12 @@ const EditPost = (props) => {
                   uid: user_id,
                   username: username
                  }
+
     axios.put("/api/put/post", data)
       .then(res => console.log(res))
       .catch(err => console.log(err))
       .then(setTimeout(() => history.replace('/'), 700 ))
+
   }
 
 
@@ -74,7 +76,5 @@ const EditPost = (props) => {
           <Button onClick={() => history.goBack()}> Cancel </Button>
         </div>
     )}
-
-
 
 export default EditPost;

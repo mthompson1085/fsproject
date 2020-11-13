@@ -1,5 +1,6 @@
-import auth0 from 'auth0-js'
+import auth0 from 'auth0-js';
 import history from './history';
+
 
 export default class Auth {
   auth0 = new auth0.WebAuth({
@@ -11,9 +12,11 @@ export default class Auth {
   })
 
   userProfile = {}
+
   login = () => {
       this.auth0.authorize()
   }
+  
   handleAuth = () => {
     this.auth0.parseHash((err, authResult) => {
       if(authResult) {

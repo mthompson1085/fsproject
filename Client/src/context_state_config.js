@@ -5,7 +5,7 @@ import * as ACTIONS from './store/actions/actions';
 import * as Reducer1 from './store/reducers/plain_reducer';
 import * as AuthReducer from './store/reducers/auth_reducer';
 import * as FormReducer from './store/reducers/form_reducer';
-import * as PostsReducer from './store/reducers/posts_reducer';
+import PostsReducer from './store/reducers/posts_reducer';
 
 import Routes from './routes';
 
@@ -127,9 +127,9 @@ const ContextState = (props) => {
             useContextChange: (event) => handleFormChange(event),
 
             //Posts State
-            postsState: statePostsReducer.posts,
-            handleAddPosts: (posts) => handleSetPosts(posts),
-            handleRemovePosts: () => handleRemovePosts(),
+           // postsState: statePostsReducer.posts,
+           // handleAddPosts: (posts) => handleSetPosts(posts),
+          //  handleRemovePosts: () => handleRemovePosts(),
 
             //Handle auth
             //keep for global state

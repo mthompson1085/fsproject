@@ -16,15 +16,12 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Button from '@material-ui/core/Button';
 
 
-
 const Profile = () => {
   const context = useContext(Context)
-
   const [stateLocal, setState] = useState({ open: false,
                                             post_id: null,
                                             posts: []
                                           })
-
   useEffect(() => {
     const user_id = context.dbProfileState[0].uid
     axios.get('/api/get/userposts', {params: { user_id: user_id}})
@@ -65,9 +62,9 @@ const Profile = () => {
         {props.profile.profile.email_verified ? <p>Yes</p> : <p>No</p> }
         <br />
       </div>
-
      )
    }
+
 
   const RenderPosts = post => (
     <Card style={{width: '500px', height: '200px', marginBottom: '10px', paddingBottom: '80px' }}>
@@ -97,14 +94,16 @@ const Profile = () => {
       <CardContent>
         <span style={{overflow: 'hidden' }}> {post.post.body} </span>
       </CardContent>
-
     </Card>
   );
-
-
-      return(
+     return(
           <div>
             <div>
+           <Link to={{pathname:"/showmessages/" + context.dbProfileState[0].uid }}>
+            <Button variant="contained" color="primary" type="submit">
+               Show Messages
+             </Button>
+           </Link>
             <RenderProfile profile={context.profileState} />
             </div>
             <div>
@@ -136,10 +135,7 @@ const Profile = () => {
                   </DialogActions>
                 </DialogContent>
             </Dialog>
-
           </div>
   )}
-
-
 
 export default (Profile);
